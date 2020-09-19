@@ -17,3 +17,4 @@ pub(crate) extern crate alloc;
 #[cfg(feature = "kern")]
 pub mod kern;
 
+pub mod sync;
