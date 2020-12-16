@@ -1,11 +1,13 @@
 
+pub mod mutex;
+
 #[cfg(feature = "loom_tests")]
 pub(crate) use loom::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
 #[cfg(feature = "loom_tests")]
 pub(crate) use loom::thread::{yield_now as spin_loop_hint};
 
 #[cfg(not(feature = "loom_tests"))]
-pub(crate) use core::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering, spin_loop_hint};
+pub(crate) use core::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, AtomicUsize, Ordering, spin_loop_hint};
 
 
 #[derive(Default, Debug)]

@@ -1,4 +1,6 @@
 #![feature(const_fn)]
+#![feature(core_intrinsics)]
+#![feature(negative_impls)]
 #![feature(test)]
 
 #![cfg_attr(not(feature = "std"), no_std)]
