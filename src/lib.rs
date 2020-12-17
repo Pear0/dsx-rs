@@ -24,5 +24,7 @@ pub mod kern;
 
 pub mod sync;
 
+pub mod sys;
+
 #[cfg(test)]
 extern crate test;

@@ -1,6 +1,7 @@
 use core::cell::UnsafeCell;
 use core::intrinsics::unlikely;
 use core::marker::PhantomData;
+use core::fmt;
 
 use crate::sync::{AtomicBool, AtomicU64, Ordering};
 use crate::sync::mutex::{GenericMutex, LockableMutex, MutexGuard};
@@ -136,6 +137,16 @@ impl<T, B: BootInfo> GenericMutex for BootMutex<T, B> {
         let mut unit: RecursiveUnit = self.lock_unit.load(Ordering::Relaxed).into();
         unit.count -= 1;
         self.lock_unit.store(unit.into(), Ordering::Release);
+    }
+}
+
+impl<T: fmt::Debug, B: BootInfo> fmt::Debug for BootMutex<T, B> {
+    #[track_caller]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.try_lock() {
+            Some(guard) => f.debug_struct("Mutex").field("data", &&*guard).finish(),
+            None => f.debug_struct("Mutex").field("data", &"<locked>").finish()
+        }
     }
 }
 

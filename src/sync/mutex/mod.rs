@@ -1,13 +1,16 @@
 use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
+use core::panic::Location;
 use core::time::Duration;
 
 pub use boot_mutex::*;
+pub use recursive::{RecursiveGuard, RecursiveMutex};
 
-use crate::sync::{AtomicBool, Ordering};
+use crate::sync::{AtomicBool, Ordering, spin_loop_hint};
+use crate::sys::system_hooks;
 
 mod boot_mutex;
-pub(crate) mod recursive;
+mod recursive;
 
 pub trait GenericMutex: Sync + Send {
     type Target;
@@ -22,6 +25,43 @@ pub trait LockableMutex<'a>: GenericMutex + Sized {
 
     fn try_lock(&'a self) -> Option<Self::Guard>;
 
+    fn lock_timeout(&'a self, timeout: Duration) -> Option<Self::Guard> {
+        if let Some(guard) = self.try_lock() {
+            return Some(guard);
+        }
+
+        let hooks = system_hooks();
+        let expires = hooks.current_time() + timeout;
+
+        loop {
+            if let Some(guard) = self.try_lock() {
+                return Some(guard);
+            }
+
+            // run out of time.
+            if hooks.current_time() > expires {
+                return None;
+            }
+
+            spin_loop_hint();
+        }
+    }
+
+    #[inline(always)]
+    #[track_caller]
+    fn lock(&'a self) -> Self::Guard {
+        if let Some(g) = self.lock_timeout(Duration::from_secs(10)) {
+            return g;
+        }
+
+        self.lock_failed(Location::caller())
+    }
+
+    #[inline(never)]
+    #[track_caller]
+    fn lock_failed(&'a self, loc: &'static Location) -> ! {
+        panic!("failed to acquire lock at {:?}", loc);
+    }
 }
 
 
