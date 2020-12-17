@@ -1,11 +1,13 @@
-mod boot_mutex;
-pub(crate) mod recursive;
+use core::cell::UnsafeCell;
+use core::ops::{Deref, DerefMut};
+use core::time::Duration;
 
 pub use boot_mutex::*;
 
-use core::ops::{Deref, DerefMut};
-use core::cell::UnsafeCell;
 use crate::sync::{AtomicBool, Ordering};
+
+mod boot_mutex;
+pub(crate) mod recursive;
 
 pub trait GenericMutex: Sync + Send {
     type Target;
@@ -15,9 +17,10 @@ pub trait GenericMutex: Sync + Send {
     unsafe fn unlock_unchecked(&self);
 }
 
-pub trait LockableMutex: GenericMutex + Sized {
+pub trait LockableMutex<'a>: GenericMutex + Sized {
+    type Guard: Deref;
 
-    fn try_lock(&self) -> Option<MutexGuard<'_, Self>>;
+    fn try_lock(&'a self) -> Option<Self::Guard>;
 
 }
 
@@ -77,7 +80,7 @@ impl GenericMutex for DummyMutex {
 }
 
 
-pub struct LightMutex<T>{
+pub struct LightMutex<T> {
     lock: AtomicBool,
     value: UnsafeCell<T>,
 }
@@ -95,8 +98,10 @@ unsafe impl<T> Send for LightMutex<T> {}
 
 unsafe impl<T> Sync for LightMutex<T> {}
 
-impl <T> LockableMutex for LightMutex<T> {
-    fn try_lock(&self) -> Option<MutexGuard<'_, Self>> {
+impl<'a, T: 'a> LockableMutex<'a> for LightMutex<T> {
+    type Guard = MutexGuard<'a, Self>;
+
+    fn try_lock(&'a self) -> Option<Self::Guard> {
         match self.lock.compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed) {
             Ok(_) => Some(unsafe { MutexGuard::new(self) }),
             Err(_) => None,
@@ -115,4 +120,19 @@ impl<T> GenericMutex for LightMutex<T> {
         self.lock.store(false, Ordering::Release);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn make_light_lock() {
+        let lock = LightMutex::new(0);
+
+        if let Some(mut l) = lock.try_lock() {
+            *l = 5;
+        };
+    }
+}
+
 
