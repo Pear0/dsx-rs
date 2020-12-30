@@ -119,7 +119,7 @@ impl GenericMutex for DummyMutex {
     unsafe fn unlock_unchecked(&self) {}
 }
 
-
+#[repr(align(128))]
 pub struct LightMutex<T> {
     lock: AtomicBool,
     value: UnsafeCell<T>,

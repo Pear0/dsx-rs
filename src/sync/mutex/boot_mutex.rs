@@ -3,8 +3,8 @@ use core::intrinsics::unlikely;
 use core::marker::PhantomData;
 use core::fmt;
 
-use crate::sync::{AtomicBool, AtomicU64, Ordering};
-use crate::sync::mutex::{GenericMutex, LockableMutex, MutexGuard};
+use crate::sync::{AtomicU64, Ordering};
+use crate::sync::mutex::{GenericMutex, LockableMutex};
 use crate::sync::mutex::recursive::{RecursiveGuard, RecursiveMutex, RecursiveUnit};
 
 pub trait BootInfo: Sync + Send + 'static {
@@ -16,6 +16,7 @@ pub trait BootInfo: Sync + Send + 'static {
     }
 }
 
+#[repr(align(128))]
 pub struct BootMutex<T, B> {
     lock_unit: AtomicU64,
     value: UnsafeCell<T>,
