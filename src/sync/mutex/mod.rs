@@ -4,12 +4,16 @@ use core::panic::Location;
 use core::time::Duration;
 
 pub use boot_mutex::*;
+pub use container::*;
+pub use hooks::*;
 pub use recursive::{RecursiveGuard, RecursiveMutex};
 
 use crate::sync::{AtomicBool, Ordering, spin_loop_hint};
 use crate::sys::system_hooks;
 
 mod boot_mutex;
+mod container;
+mod hooks;
 mod recursive;
 
 pub trait GenericMutex: Sync + Send {
@@ -23,18 +27,25 @@ pub trait GenericMutex: Sync + Send {
 pub trait LockableMutex<'a>: GenericMutex + Sized {
     type Guard: Deref;
 
-    fn try_lock(&'a self) -> Option<Self::Guard>;
+    #[track_caller]
+    fn try_lock(&'a self) -> Option<Self::Guard> {
+        self.try_lock_info(None)
+    }
 
+    fn try_lock_info(&'a self, _trying_since: Option<&Duration>) -> Option<Self::Guard>;
+
+    #[track_caller]
     fn lock_timeout(&'a self, timeout: Duration) -> Option<Self::Guard> {
-        if let Some(guard) = self.try_lock() {
+        if let Some(guard) = self.try_lock_info(None) {
             return Some(guard);
         }
 
         let hooks = system_hooks();
-        let expires = hooks.current_time() + timeout;
+        let start = hooks.current_time();
+        let expires = start + timeout;
 
         loop {
-            if let Some(guard) = self.try_lock() {
+            if let Some(guard) = self.try_lock_info(Some(&start)) {
                 return Some(guard);
             }
 
@@ -141,7 +152,7 @@ unsafe impl<T> Sync for LightMutex<T> {}
 impl<'a, T: 'a> LockableMutex<'a> for LightMutex<T> {
     type Guard = MutexGuard<'a, Self>;
 
-    fn try_lock(&'a self) -> Option<Self::Guard> {
+    fn try_lock_info(&'a self, _: Option<&Duration>) -> Option<Self::Guard> {
         match self.lock.compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed) {
             Ok(_) => Some(unsafe { MutexGuard::new(self) }),
             Err(_) => None,

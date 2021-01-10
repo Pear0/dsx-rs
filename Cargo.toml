@@ -23,6 +23,7 @@ loom_tests = ["std", "loom"]
 
 [dependencies]
 crossbeam-utils = { git = "https://github.com/jonhoo/crossbeam", branch = "loom", version = "0.8.0", default-features = false, features = [] }
+downcast-rs = { version = "1.2.0", default-features = false }
 loom = { version = "0.4", features = ["checkpoint"], optional = true }
 
 [dev-dependencies]

@@ -1,10 +1,10 @@
-use core::cell::UnsafeCell;
-use core::intrinsics::unlikely;
-use core::marker::PhantomData;
-use core::fmt;
-
+use crate::core::cell::UnsafeCell;
+use crate::core::fmt;
+use crate::core::intrinsics::unlikely;
+use crate::core::marker::PhantomData;
+use crate::core::time::Duration;
 use crate::sync::{AtomicU64, Ordering};
-use crate::sync::mutex::{GenericMutex, LockableMutex};
+use crate::sync::mutex::{GenericMutex, LockableMutex, MutexDataContainerSync};
 use crate::sync::mutex::recursive::{RecursiveGuard, RecursiveMutex, RecursiveUnit};
 
 pub trait BootInfo: Sync + Send + 'static {
@@ -60,7 +60,7 @@ impl<T, B: BootInfo> BootMutex<T, B> {
 impl<'a, T: 'a, B: BootInfo> LockableMutex<'a> for BootMutex<T, B> {
     type Guard = RecursiveGuard<'a, Self>;
 
-    fn try_lock(&'a self) -> Option<Self::Guard> {
+    fn try_lock_info(&'a self, _: Option<&Duration>) -> Option<Self::Guard> {
         if unsafe { unlikely(!B::can_use_cas()) } {
             return self.try_early_boot_lock();
         }
@@ -188,12 +188,9 @@ mod tests {
             *l = 5;
 
             l.recursion(|| {
-
                 let mut l2 = lock.try_lock().unwrap();
                 *l2 = 6;
-
             });
-
         }
     }
 
@@ -224,6 +221,5 @@ mod tests {
         let mut l = lock.try_lock().unwrap();
         assert!(lock.try_lock().is_none());
     }
-
 }
 
