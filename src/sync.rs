@@ -1,5 +1,6 @@
 
 pub mod mutex;
+pub mod sema;
 
 #[cfg(feature = "loom_tests")]
 pub(crate) use loom::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
