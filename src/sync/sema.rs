@@ -23,6 +23,10 @@ impl<T> SingleSetSemaphore<T> {
         }
     }
 
+    pub fn is_initialized(this: &Self) -> bool {
+        this.state.load(Ordering::Relaxed) == INITED
+    }
+
     pub unsafe fn set_racy(this: &Self, value: T) {
         assert_eq!(this.state.load(Ordering::Relaxed), UNINIT);
         *this.value.get() = MaybeUninit::new(value);
