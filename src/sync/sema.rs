@@ -13,6 +13,8 @@ pub struct SingleSetSemaphore<T> {
     state: AtomicUsize,
 }
 
+unsafe impl<T> Sync for SingleSetSemaphore<T> {}
+
 impl<T> SingleSetSemaphore<T> {
     pub const fn new() -> Self {
         Self {
