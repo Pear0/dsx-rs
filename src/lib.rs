@@ -20,6 +20,8 @@ pub extern crate alloc;
 
 pub mod collections;
 
+pub mod hints;
+
 #[cfg(feature = "kern")]
 pub mod kern;
 

@@ -1,8 +1,8 @@
 use crate::core::cell::UnsafeCell;
 use crate::core::fmt;
-use crate::core::intrinsics::unlikely;
 use crate::core::marker::PhantomData;
 use crate::core::time::Duration;
+use crate::hints::unlikely;
 use crate::sync::{AtomicU64, Ordering};
 use crate::sync::mutex::{GenericMutex, LockableMutex};
 use crate::sync::mutex::recursive::{RecursiveGuard, RecursiveMutex, RecursiveUnit};
@@ -61,7 +61,7 @@ impl<'a, T: 'a, B: BootInfo> LockableMutex<'a> for BootMutex<T, B> {
     type Guard = RecursiveGuard<'a, Self>;
 
     fn try_lock_info(&'a self, _: Option<&Duration>) -> Option<Self::Guard> {
-        if unsafe { unlikely(!B::can_use_cas()) } {
+        if unlikely(!B::can_use_cas()) {
             return self.try_early_boot_lock();
         }
 
@@ -96,7 +96,7 @@ impl<T, B: BootInfo> RecursiveMutex for BootMutex<T, B> {
     type Token = u64;
 
     unsafe fn increment_recursion_unchecked(&self) -> Self::Token {
-        if unsafe { unlikely(!B::can_use_cas()) } {
+        if unlikely(!B::can_use_cas()) {
             panic!("cannot use increment_recursion() before CAS is available");
         }
         let mut unit: RecursiveUnit = self.lock_unit.load(Ordering::Acquire).into();
@@ -109,7 +109,7 @@ impl<T, B: BootInfo> RecursiveMutex for BootMutex<T, B> {
     }
 
     unsafe fn decrement_recursion_unchecked(&self, token: Self::Token) {
-        if unsafe { unlikely(!B::can_use_cas()) } {
+        if unlikely(!B::can_use_cas()) {
             panic!("cannot use increment_recursion() before CAS is available");
         }
 
@@ -131,7 +131,7 @@ impl<T, B: BootInfo> GenericMutex for BootMutex<T, B> {
     }
 
     unsafe fn unlock_unchecked(&self) {
-        if unsafe { unlikely(!B::can_use_cas()) } {
+        if unlikely(!B::can_use_cas()) {
             return self.early_boot_unlock();
         }
 
@@ -218,7 +218,7 @@ mod tests {
     fn double_lock_test() {
         let lock = Mutex::new(0);
 
-        let mut l = lock.try_lock().unwrap();
+        let _ = lock.try_lock().unwrap();
         assert!(lock.try_lock().is_none());
     }
 }
