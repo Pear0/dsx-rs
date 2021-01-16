@@ -1,4 +1,4 @@
-use crate::sync::{AtomicBool, AtomicPtr, AtomicRef, AtomicUsize, Ordering, RwSemaphore, spin_loop_hint, RwWriteGuard};
+use crate::sync::{AtomicBool, AtomicRef, AtomicUsize, Ordering, RwSemaphore, spin_loop_hint};
 
 #[derive(Debug)]
 pub struct IntrusiveInfo<T: IntrusiveNode> {

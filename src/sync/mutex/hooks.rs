@@ -18,7 +18,7 @@ pub trait LockHooks: Send + Sync + 'static {
 struct NopLockHooks;
 
 impl LockHooks for NopLockHooks {
-    fn on_locked(&self, item: &mut MutexDataContainerSync, ctx: &LockContext) {}
+    fn on_locked(&self, _item: &mut MutexDataContainerSync, _ctx: &LockContext) {}
 }
 
 pub static mut HOOKS: &dyn LockHooks = &NopLockHooks;

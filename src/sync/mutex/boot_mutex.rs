@@ -4,7 +4,7 @@ use crate::core::intrinsics::unlikely;
 use crate::core::marker::PhantomData;
 use crate::core::time::Duration;
 use crate::sync::{AtomicU64, Ordering};
-use crate::sync::mutex::{GenericMutex, LockableMutex, MutexDataContainerSync};
+use crate::sync::mutex::{GenericMutex, LockableMutex};
 use crate::sync::mutex::recursive::{RecursiveGuard, RecursiveMutex, RecursiveUnit};
 
 pub trait BootInfo: Sync + Send + 'static {

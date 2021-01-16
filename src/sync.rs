@@ -80,10 +80,8 @@ impl RwSemaphore {
     }
 
     fn exchange_loop<F>(&self, success: Ordering, mut func: F) -> ExgOp where F: FnMut(usize) -> ExgOp {
-        let mut value = self.0.load(Ordering::Relaxed);
         loop {
-            // i don't think this should be necessary but tests fail without it...
-            value = self.0.load(Ordering::Relaxed);
+            let value = self.0.load(Ordering::Relaxed);
 
             let new_value = match func(value) {
                 ExgOp::Value(v) => v,
@@ -98,8 +96,7 @@ impl RwSemaphore {
 
             match self.0.compare_exchange(value, new_value, success, Ordering::Relaxed) {
                 Ok(_) => return ExgOp::Value(new_value),
-                Err(v) => {
-                    value = v;
+                Err(_) => {
                     spin_loop_hint();
                     continue;
                 },

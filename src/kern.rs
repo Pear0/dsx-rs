@@ -1,4 +1,3 @@
-use crate::core::time::Duration;
 use crate::core::marker::PhantomData;
 use crate::core::cell::UnsafeCell;
 use crate::core::sync::atomic::{AtomicBool, Ordering};
