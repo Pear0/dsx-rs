@@ -22,13 +22,13 @@ loom_tests = ["std", "loom"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-crossbeam-utils = { git = "https://github.com/jonhoo/crossbeam", branch = "loom", version = "0.8.0", default-features = false, features = [] }
+crossbeam-utils = { git = "https://github.com/crossbeam-rs/crossbeam", branch = "master", version = "0.8.0", default-features = false, features = [] }
 downcast-rs = { version = "1.2.0", default-features = false }
 loom = { version = "0.4", features = ["checkpoint"], optional = true }
 
 [dev-dependencies]
 # Pull crossbeam from jonhoo's
-crossbeam = { git = "https://github.com/jonhoo/crossbeam", branch = "loom", version = "0.8.0" }
+crossbeam = { git = "https://github.com/crossbeam-rs/crossbeam", branch = "master", version = "0.8.0" }
 
 
 [profile.test]
