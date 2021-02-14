@@ -29,7 +29,3 @@ loom = { version = "0.4", features = ["checkpoint"], optional = true }
 [dev-dependencies]
 # Pull crossbeam from jonhoo's
 crossbeam = { git = "https://github.com/crossbeam-rs/crossbeam", branch = "master", version = "0.8.0" }
-
-
-[profile.test]
-panic = "unwind"
